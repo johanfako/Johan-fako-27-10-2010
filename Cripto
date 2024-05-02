@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity >=0.4.16 <0.9.0;
+
+/// @title A simple cryptocurrency contract
+contract Coin {
+    // The keyword "public" makes the variables
+    // accessible from other contracts
+    address public minter; // The address of the contract creator
+    mapping (address => uint) public balances; // A map of account addresses and their balances
+
+    // Events allow clients to react to specific
+    // contract changes you declare
+    event Sent(address from, address to, uint amount); // An event that is emitted when a transfer occurs
+
+    /// @dev The constructor runs only once when the contract is created
+    constructor() {
+        minter = msg.sender; // Set the contract creator as the minter
+    }
+
+    /// @notice Mint new coins and send them to an account
+    /// @dev This function can only be called by the minter
+    /// @param receiver The address of the receiver
+    /// @param amount The amount of coins to mint
+    function mint(address receiver, uint amount) public {
+        require(msg.sender == minter, "Only the minter can mint new coins"); // Check if the caller is the minter
+        require(amount < 1e60, "Maximum amount exceeded"); // Check if the amount is too large
+        balances[receiver] += amount; // Increase the receiver's balance
+    }
+
+    /// @notice Send coins from one account to another
+    /// @dev This function can only be called by the sender
+    /// @param receiver The address of the receiver
+    /// @param amount The amount of coins to send
+    function send(address receiver, uint amount) public {
+        require(amount <= balances[msg.sender], "Insufficient balance"); // Check if the sender has enough balance
+        balances[msg.sender] -= amount; // Decrease the sender's balance
+        balances[receiver] += amount; // Increase the receiver's balance
+        emit Sent(msg.sender, receiver, amount); // Emit the Sent event
+    }
+}
